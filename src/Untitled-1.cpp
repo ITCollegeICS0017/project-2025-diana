@@ -54,15 +54,26 @@ class Database {
 }
 
 class Client {
-    public:
-        void requestReturn() {
-
-        }
-
     private:
         string mPassportData;
         float mBalance;
-        
+        list<int> purchasedTicketIds;
+
+    public:
+        // Constructor
+        Client(string passport, float balance) : mPassportData(passport), mBalance(balance) {}
+
+        void requestReturn() {
+            cout << "Client requests ticket return.\n";
+        }
+
+        void requestPurchase() {
+            cout << "Client requests ticket purchase.\n";
+        }
+
+        void listTickets() {
+            cout << "Client has " << purchasedTicketIds.size() << " purchased tickets.\n";
+        }
 }
 
 class Cashier {
