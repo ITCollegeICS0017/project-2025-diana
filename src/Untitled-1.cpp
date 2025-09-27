@@ -21,10 +21,10 @@ class Ticket {
         string mDate;
         float mCost; // Assumed in EUR
         string mDestination;
-        string mCoachType;
+        Coach mCoachType;
         Status mStatus;
     public:
-        Ticket(int id, string date, float cost, string destination, string coachType, Status status) {
+        Ticket(int id, string date, float cost, string destination, Coach coachType, Status status) {
             mId = id;
             mDate = date;
             mCost = cost;
@@ -52,31 +52,29 @@ class Ticket {
 
 class Database {
     private:
-        vector<Ticket> tickets;
+        vector<Ticket> mTickets;
     public:
         void addTicket(const Ticket& t) {
-            tickets.push_back(t);
+            mTickets.push_back(t);
             cout << "Ticket added to database.\n";
         }
 
 
         void listTickets() {
             cout << "Listing tickets:\n";
-            for (auto& t : tickets) {
+            for (auto& t : mTickets) {
                 t.showDetails();
             }
         }
 
-        // Ticket search, optional coach type filter not implemented yet
-        Ticket* findAvailableTicket(string destination, string date) {
-            for (auto& t : tickets) {
-                if (t.getDestination() == destination && t.getDate() == date && t.getStatus() == Available) {
-                    cout << "Available ticket found (ID: " << t.getId() << ").\n";
-                    return &t;
-                }
-            }
-            cout << "No available ticket found for " << destination << " on " << date << "\n";
-            return nullptr;
+        // Ticket search, optional coach type filter, not implemented yet
+        void findAvailableTicket(string destination, string date) {
+            cout << "Ticket found according to filters.\n";
+        }
+
+        // Ticket status change, not implemented yet
+        void updateTicketStatus(int id, Status newStatus) {
+            cout << "Ticket status changed.\n";
         }
 };
 
@@ -91,10 +89,12 @@ class Client {
         Client(string passport, float balance) : mPassportData(passport), mBalance(balance) {}
 
         void requestReturn() {
+            // Triggers Cashier.completeReturn() using the ticket ID, not implemented yet
             cout << "Client requests ticket return.\n";
         }
 
         void requestPurchase() {
+            // Triggers Cashier.completePurchase() using the ticket ID, not implemented yet
             cout << "Client requests ticket purchase.\n";
         }
 
@@ -104,11 +104,47 @@ class Client {
 };
 
 class Cashier {
-
+    private:
+        vector<Transaction> mRegistry;
+    public:
+        void completePurchase() {
+            // Will update ticket status to "Reserved", then take client's money, then update ticket status to "Sold", then print a check, then update mRegistry with operation details, not implemented yet
+            cout << "Cashier completes purchase.\n";
+        }
+        
+        void completeReturn() {
+            // Will calculate return, then apply to the client, then update ticket status to "Available", then print a check, then update mRegistry with operation details, not implemented yet
+            cout << "Cashier completes return.\n";
+        }
+        
+        void submitReport() {
+            // Will loop through the registry and save the log
+            cout << "Cashier submits daily report.\n";
+        }
 };
 
 
 
 int main() {
+    Ticket t1(1, "2025-10-01", 50.0, "Tallinn", Sleeper, Available);
+    Ticket t2(2, "2025-10-02", 30.0, "Riga", Compartment, Available);
 
+
+    Database db;
+    db.addTicket(t1);
+    db.addTicket(t2);
+    db.listTickets();
+    Cashier testCashier;
+
+    db.findAvailableTicket("Tallinn", "2025-10-01");
+
+    Client testClient("John", 100.0);
+    testClient.requestPurchase();
+    testCashier.completePurchase();
+    db.updateTicketStatus(1, Reserved);
+
+    testCashier.submitReport();
+
+
+    return 0;
 }
