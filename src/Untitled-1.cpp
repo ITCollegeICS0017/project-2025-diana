@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 using namespace std;
 
 
@@ -47,17 +48,43 @@ class Ticket {
         string getDestination() { return mDestination; }
         string getDate() { return mDate; }
         float getCost() { return mCost; }
-}
+};
 
 class Database {
-    
-}
+    private:
+        vector<Ticket> tickets;
+    public:
+        void addTicket(const Ticket& t) {
+            tickets.push_back(t);
+            cout << "Ticket added to database.\n";
+        }
+
+
+        void listTickets() {
+            cout << "Listing tickets:\n";
+            for (auto& t : tickets) {
+                t.showDetails();
+            }
+        }
+
+        // Ticket search, optional coach type filter not implemented yet
+        Ticket* findAvailableTicket(string destination, string date) {
+            for (auto& t : tickets) {
+                if (t.getDestination() == destination && t.getDate() == date && t.getStatus() == Available) {
+                    cout << "Available ticket found (ID: " << t.getId() << ").\n";
+                    return &t;
+                }
+            }
+            cout << "No available ticket found for " << destination << " on " << date << "\n";
+            return nullptr;
+        }
+};
 
 class Client {
     private:
         string mPassportData;
         float mBalance;
-        list<int> purchasedTicketIds;
+        vector<int> purchasedTicketIds;
 
     public:
         // Constructor
@@ -74,11 +101,11 @@ class Client {
         void listTickets() {
             cout << "Client has " << purchasedTicketIds.size() << " purchased tickets.\n";
         }
-}
+};
 
 class Cashier {
 
-}
+};
 
 
 
