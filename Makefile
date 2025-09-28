@@ -1,7 +1,7 @@
-CC=gcc
-CFLAGS=-Wall -Wextra -Werror -std=c11
-SRC=$(wildcard src/*.c)
-OBJ=$(SRC:.c=.o)
+CXX=g++
+CXXLAGS=-Wall -Wextra -Werror -std=c++17
+SRC=$(wildcard src/*.cpp)
+OBJ=$(SRC:.cpp=.o)
 BIN=app
 
 .PHONY: all run test clean
@@ -9,7 +9,7 @@ BIN=app
 all: $(BIN)
 
 $(BIN): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 run: $(BIN)
 	./$(BIN)
