@@ -1,23 +1,56 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/Unv3Nbtc)
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=20640539&assignment_repo_type=AssignmentRepo)
-# Student Project Template 
+# Railway Ticket Sales System
+
+## Team Members
+- Diana Anastassija Turks (@molchanka)
+
+## Project Description
+This project is an implementation of a **Railway Ticket Sales System** written in C++.
+### Description from Offered Project Topics File
+Railway tickets are sold as follows: a client requests availability for a specific date and destination, optionally indicating the type of coach (sleeper, compartment, etc.). The cashier searches the database and offers available options, which are temporarily blocked until the purchase is completed. The client provides passport data, and the cashier issues the ticket and accepts payment.
+
+Data entered by the cashier are stored in a central database to prevent double sales. Ticket returns are possible: the client receives a refund minus a penalty, and the ticket is marked as available again. The penalty depends on the time before departure:
+- 1% if returned one month before,
+- 5% if returned 15 days before,
+- 10% if returned 3 days before,
+- 30% if returned on the day of travel.
+
+At the end of the day, the cashier submits a report on sold and returned tickets to the
+central office.
+
+## Current Limitations
+- No file persistence yet: tickets are stored only in memory.
+- Coach type and status enums are printed as integers instead of names.
+- Refund penalty calculation is not implemented.
+- Client–Cashier interaction is simplified: methods only print actions (cout).
+- Error handling and input validation are minimal.
+These limitations will be addressed in upcoming releases.
+
 ## Build & Run
-## Release workflow
-- We keep ONE repository for the whole project.
-- At the end of each checkpoint, mark a release tag and add your report.
+Make sure you have `g++` (C++17 or newer) installed.  
 
-### Mark a release tag
-###  end of Release 1:
-git tag release-1
-git push origin release-1
+To build and run:
+```bash
+make run
+```
 
-###  end of Release 2:
-git tag release-2
-git push origin release-2
+To run basic tests:
+```bash
+make test
+```
+
+To clean up build artifacts"
+```bash
+make clean
+```
 
 ### Folders for documents
-docs/release-1/  # slides, SRS/SDP updates, test report
-
+src/               # source code
+tests/             # test programs
+docs/release-1/    # Release 1 materials (slides, report, updated SRS/SDS)
 docs/release-2/
-
 docs/release-3/
+docs/release-4/
+Makefile           # build commands
+README.md          # project description, team members, build/run instructions
+.gitignore         # ignore generated files, IDE configs, etc.
+
