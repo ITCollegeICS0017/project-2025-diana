@@ -25,10 +25,43 @@ namespace Config {
     constexpr int MAX_MEMORY_MB = 100;
     constexpr int MAX_DB_FILE_MB = 50;
     constexpr int OP_TIMEOUT_SECONDS = 3;
-    constexpr double EPS_ROUND = 0.005; // used for rounding to 2 decimals
+    constexpr float EPS_ROUND = 0.005; // used for rounding to 2 decimals
 }
 
+/* ---------- Utility helpers ---------- */
 
+static string StatusToString(Status s) {
+    switch (s) {
+        case Status::Available: return "Available";
+        case Status::Reserved:  return "Reserved";
+        case Status::Sold:      return "Sold";
+        default: return "Unknown";
+    }
+}
+
+static string CoachToString(Coach c) {
+    switch (c) {
+        case Coach::Sleeper: return "Sleeper";
+        case Coach::Compartment: return "Compartment";
+        case Coach::Economy: return "Economy";
+        case Coach::FirstClass: return "FirstClass";
+        default: return "Unknown";
+    }
+}
+
+static float round2(float v) {
+    // simple rounding to two decimals
+    return static_cast<float>(std::floor((v + Config::EPS_ROUND) * 100.0f) / 100.0f);
+}
+
+static string nowTimestamp() {
+    std::time_t t = std::time(nullptr);
+    char buf[64];
+    std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", std::localtime(&t));
+    return string(buf);
+}
+
+/* ---------- Data models ---------- */
 
 class Ticket {
     private:
