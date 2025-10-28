@@ -1,8 +1,14 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <optional>
+#include <iomanip>
+#include <sstream>
+#include <ctime>
+#include <algorithm>
 using namespace std;
 
+/* ---------- Configuration / Enums ---------- */
 
 enum Status { Available, Reserved, Sold };
 
@@ -14,6 +20,15 @@ struct Transaction {
     string timestamp;
     float amount; // Assumed in EUR
 };
+
+namespace Config {
+    constexpr int MAX_MEMORY_MB = 100;
+    constexpr int MAX_DB_FILE_MB = 50;
+    constexpr int OP_TIMEOUT_SECONDS = 3;
+    constexpr double EPS_ROUND = 0.005; // used for rounding to 2 decimals
+}
+
+
 
 class Ticket {
     private:
