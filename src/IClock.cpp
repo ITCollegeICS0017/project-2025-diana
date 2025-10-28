@@ -3,6 +3,7 @@
 #include <ctime>
 #include <cstdio>
 #include <cmath>
+#include <memory>
 
 // SimpleClock made available here for ease
 class SimpleClockImpl : public IClock {
