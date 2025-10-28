@@ -193,37 +193,77 @@ public:
         return true;
     }
 
-    // convenience to fetch by index
+    // Convenience to fetch by index
     Ticket* getByIndex(int idx) {
         if (idx < 0 || static_cast<size_t>(idx) >= mTickets.size()) return nullptr;
         return &mTickets[static_cast<size_t>(idx)];
     }
 };
 
-class Client {
-    private:
-        string mPassportData;
-        float mBalance;
-        vector<int> purchasedTicketIds;
 
-    public:
-        // Constructor
-        Client(string passport, float balance) : mPassportData(passport), mBalance(balance) {}
-
-        void requestReturn() {
-            // Triggers Cashier.completeReturn() using the ticket ID, not implemented yet
-            cout << "Client requests ticket return.\n";
-        }
-
-        void requestPurchase() {
-            // Triggers Cashier.completePurchase() using the ticket ID, not implemented yet
-            cout << "Client requests ticket purchase.\n";
-        }
-
-        void listTickets() {
-            cout << "Client has " << purchasedTicketIds.size() << " purchased tickets.\n";
-        }
+class TrainRepository {
+    // Stubbed for future extension per design requirement
+public:
+    TrainRepository() = default;
+    // Very minimal API
+    void addTrain(const string& /*trainId*/) {}
 };
+
+
+class PassengerRepository {
+private:
+    // small in-memory map of passport->balance and purchased ticket IDs
+    struct Passenger {
+        string passport;
+        float balance;
+        vector<int> purchasedTickets;
+    };
+    vector<Passenger> mPassengers;
+public:
+    void addPassenger(const string& passport, float balance) {
+        if (getPassenger(passport)) return;
+        Passenger p{passport, balance, {}};
+        mPassengers.push_back(std::move(p));
+    }
+
+    Passenger* getPassenger(const string& passport) {
+        for (auto& p : mPassengers) {
+            if (p.passport == passport) return &p;
+        }
+        return nullptr;
+    }
+
+    bool adjustBalance(const string& passport, float delta) {
+        Passenger* p = getPassenger(passport);
+        if (!p) return false;
+        float newBal = p->balance + delta;
+        if (newBal < 0.0f) return false;
+        p->balance = newBal;
+        return true;
+    }
+
+    float getBalance(const string& passport) const {
+        for (const auto& p : mPassengers) {
+            if (p.passport == passport) return p.balance;
+        }
+        return 0.0f;
+    }
+
+    void addPurchasedTicket(const string& passport, int ticketId) {
+        Passenger* p = getPassenger(passport);
+        if (!p) return;
+        p->purchasedTickets.push_back(ticketId);
+    }
+
+    vector<int> getPurchasedTickets(const string& passport) const {
+        for (const auto& p : mPassengers) {
+            if (p.passport == passport) return p.purchasedTickets;
+        }
+        return {};
+    }
+};
+
+
 
 class Cashier {
     private:
