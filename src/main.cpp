@@ -108,7 +108,15 @@ class Ticket {
         string getDate() { return mDate; }
         float getCost() { return mCost; }
         Coach getCoachType() const { return mCoachType; }
+        
+        string toCSV() const {
+            std::ostringstream oss;
+            oss << mId << "," << mDate << "," << mDestination << "," << CoachToString(mCoachType) << "," << fixed << setprecision(2) << mCost << "," << StatusToString(mStatus);
+            return oss.str();
+        }
 };
+
+
 
 /* ---------- IClock interface and implementation ---------- */
 
