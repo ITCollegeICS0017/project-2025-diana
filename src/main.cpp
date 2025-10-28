@@ -110,6 +110,40 @@ class Ticket {
         Coach getCoachType() const { return mCoachType; }
 };
 
+/* ---------- IClock interface and implementation ---------- */
+
+class IClock {
+public:
+    virtual ~IClock() = default;
+    virtual string nowISO() const = 0;
+    virtual int daysBetween(const string& dateIso) const = 0; // simple helper: days from now to given date (non-negative if in future)
+};
+
+class SimpleClock : public IClock {
+public:
+    string nowISO() const override {
+        return nowTimestamp();
+    }
+
+    int daysBetween(const string& dateIso) const override {
+        // Very small helper to compute rough difference in days between now and a YYYY-MM-DD string
+        // If parsing fails, return -1
+        std::tm tmTarget = {};
+        if (sscanf(dateIso.c_str(), "%d-%d-%d", &tmTarget.tm_year, &tmTarget.tm_mon, &tmTarget.tm_mday) != 3) {
+            return -1;
+        }
+        tmTarget.tm_year -= 1900;
+        tmTarget.tm_mon -= 1;
+        tmTarget.tm_hour = 0; tmTarget.tm_min = 0; tmTarget.tm_sec = 0;
+        std::time_t tTarget = std::mktime(&tmTarget);
+        if (tTarget == -1) return -1;
+        std::time_t tNow = std::time(nullptr);
+        double days = std::difftime(tTarget, tNow) / (60.0 * 60.0 * 24.0);
+        return static_cast<int>(std::floor(days + 0.5)); // round to nearest day
+    }
+};
+
+
 class Database {
     private:
         vector<Ticket> mTickets;
