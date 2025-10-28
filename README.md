@@ -25,11 +25,20 @@ central office.
 These limitations will be addressed in upcoming releases.
 
 ## Build & Run
-Make sure you have `g++` (C++17 or newer) installed.  
+Make sure you have `g++` (C++17 or newer) installed. If using Windows CMake, make sure your have `make`, `cmake` and a C++ toolchain: Visual Studio (MSVC) or MinGW-w64/MSYS2 (GCC).
 
 To build and run:
 ```bash
 make run
+```
+```powershell
+# from project root
+mkdir build
+Set-Location build
+cmake ..
+cmake --build . --config App
+# run the executable (adjust path/name as needed)
+.\App\app.exe
 ```
 
 To run basic tests:
