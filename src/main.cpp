@@ -72,21 +72,32 @@ class Ticket {
         Coach mCoachType;
         Status mStatus;
     public:
-        Ticket(int id, string date, float cost, string destination, Coach coachType, Status status) {
-            mId = id;
-            mDate = date;
-            mCost = cost;
-            mDestination = destination;
-            mCoachType = coachType;
-            mStatus = status;
+        Ticket(int id,
+            const string& date,
+            float cost,
+            const string& destination,
+            Coach coachType,
+            Status status)
+            : mId(id),
+            mDate(date),
+            mCost(cost),
+            mDestination(destination),
+            mCoachType(coachType),
+            mStatus(status)
+        {
+            // Runtime checks
+            if (id <= 0) throw std::invalid_argument("Ticket id must be positive");
+            if (date.empty()) throw std::invalid_argument("Date is required");
+            if (cost < 0.0f) throw std::invalid_argument("Cost cannot be negative");
         }
     
         void showDetails() {
         cout << "Ticket ID: " << mId 
              << ", Destination: " << mDestination
              << ", Date: " << mDate 
-             << ", Cost: " << mCost
-             << ", Status: " << mStatus << endl;
+             << ", Cost: " << fixed << setprecision(2) mCost
+             << ", Coach: " << CoachToString(mCoachType)
+             << ", Status: " << StatusToString(mStatus) << endl;
         }
 
         void setStatus(Status s) { mStatus = s; }
@@ -96,6 +107,7 @@ class Ticket {
         string getDestination() { return mDestination; }
         string getDate() { return mDate; }
         float getCost() { return mCost; }
+        Coach getCoachType() const { return mCoachType; }
 };
 
 class Database {
