@@ -18,10 +18,9 @@ At the end of the day, the cashier submits a report on sold and returned tickets
 central office.
 
 ## Current Limitations
-- No file persistence yet: tickets are stored only in memory.
-- Coach type and status enums are printed as integers instead of names.
-- Refund penalty calculation is not implemented.
-- Client–Cashier interaction is simplified: methods only print actions (cout).
+- No durable persistence (CSV/atomic writes).
+- No automated logging files.
+- No full TrainRepository schedules.
 - Error handling and input validation are minimal.
 These limitations will be addressed in upcoming releases.
 
@@ -44,10 +43,11 @@ make clean
 ```
 
 ### Folders for documents
-src/               # source code
+src/               # implementation files (part of Modular Design principle)
+include/           # public headers (part of Modular Design principle)
 tests/             # test programs
 docs/release-1/    # Release 1 materials (slides, report, updated SRS/SDS)
-docs/release-2/
+docs/release-2/    # Release 2 materials (updated SRS/SDS, DLD)
 docs/release-3/
 docs/release-4/
 Makefile           # build commands
