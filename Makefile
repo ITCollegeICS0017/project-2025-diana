@@ -14,19 +14,17 @@ INCLUDES = include
 
 all: $(BIN)
 
-# link application
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
+    $(CXX) $(CXXFLAGS) -c -o $@ $<
+
 $(BIN): $(OBJ)
     $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
-# compile rule for .o
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
-    $(CXX) $(CXXFLAGS) -c -o $@ $<
 
 run: $(BIN)
     ./$(BIN)
 
-# Build a test executable (keeps tests separate from main app)
-# tests/tests.cpp should include or reference your test harness (see earlier instructions)
+# Build a test executable
 $(TEST_BIN): $(OBJ) $(TEST_SRC)
     $(CXX) $(CXXFLAGS) -o $@ $(filter-out $(SRC_DIR)/main.o,$(OBJ)) $(TEST_SRC)
 
