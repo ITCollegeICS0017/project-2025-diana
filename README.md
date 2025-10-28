@@ -25,7 +25,7 @@ central office.
 These limitations will be addressed in upcoming releases.
 
 ## Build & Run
-Make sure you have `g++` (C++17 or newer) installed. If using Windows CMake, make sure your have `make`, `cmake` and a C++ toolchain: Visual Studio (MSVC) or MinGW-w64/MSYS2 (GCC).
+Make sure you have `g++` (C++17 or newer) installed. If using PowerShell CMake, make sure your have `make`, `cmake` and a C++ toolchain: Visual Studio (MSVC) or MinGW-w64/MSYS2 (GCC).
 
 To build and run:
 ```bash
@@ -52,14 +52,23 @@ make clean
 ```
 
 ### Folders for documents
-src/               # implementation files (part of Modular Design principle)
-include/           # public headers (part of Modular Design principle)
-tests/             # test programs
-docs/release-1/    # Release 1 materials (slides, report, updated SRS/SDS)
-docs/release-2/    # Release 2 materials (updated SRS/SDS, DLD)
-docs/release-3/
-docs/release-4/
-Makefile           # build commands
-README.md          # project description, team members, build/run instructions
-.gitignore         # ignore generated files, IDE configs, etc.
 
+├───docs
+
+│   ├───release-1  -  Release 1 materials (slides, report, updated SRS/SDS)
+
+│   └───release-2  -  Release 2 materials (updated SRS/SDS, DLD)
+
+├───include  -  public headers (part of Modular Design principle)
+
+├───src  -  implementation files (part of Modular Design principle)
+
+└───tests  -  test programs
+
+Makefile  -  build commands
+
+CMakeList.txt  -  build commands
+
+README.md  -  project description, team members, build/run instructions
+
+.gitignore  -  ignore generated files, IDE configs, etc.
