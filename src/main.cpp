@@ -108,7 +108,7 @@ class Ticket {
         string getDate() { return mDate; }
         float getCost() { return mCost; }
         Coach getCoachType() const { return mCoachType; }
-        
+
         string toCSV() const {
             std::ostringstream oss;
             oss << mId << "," << mDate << "," << mDestination << "," << CoachToString(mCoachType) << "," << fixed << setprecision(2) << mCost << "," << StatusToString(mStatus);
@@ -151,33 +151,53 @@ public:
     }
 };
 
+/* ---------- Repositories ---------- */
 
-class Database {
-    private:
-        vector<Ticket> mTickets;
-    public:
-        void addTicket(const Ticket& t) {
-            mTickets.push_back(t);
-            cout << "Ticket added to database.\n";
+class TicketRepository {
+private:
+    vector<Ticket> mTickets;
+public:
+    void addTicket(const Ticket& t) {
+        mTickets.push_back(t);
+    }
+
+    vector<Ticket> listAll() const {
+        return mTickets;
+    }
+
+    // Search available tickets with optional coach filter
+    vector<int> findAvailable(const string& destination, const string& date, optional<Coach> coachFilter = nullopt) {
+        vector<int> results;
+        for (size_t i = 0; i < mTickets.size(); ++i) {
+            const Ticket& t = mTickets[i];
+            if (t.getStatus() != Status::Available) continue;
+            if (!destination.empty() && t.getDestination() != destination) continue;
+            if (!date.empty() && t.getDate() != date) continue;
+            if (coachFilter.has_value() && t.getCoachType() != coachFilter.value()) continue;
+            results.push_back(static_cast<int>(i)); // index in repository
         }
+        return results;
+    }
 
-
-        void listTickets() {
-            cout << "Listing tickets:\n";
-            for (auto& t : mTickets) {
-                t.showDetails();
-            }
+    Ticket* getById(int id) {
+        for (auto& t : mTickets) {
+            if (t.getId() == id) return &t;
         }
+        return nullptr;
+    }
 
-        // Ticket search, optional coach type filter, not implemented yet
-        void findAvailableTicket(string destination, string date) {
-            cout << "Ticket found according to filters.\n";
-        }
+    bool updateStatusById(int id, Status newStatus) {
+        Ticket* t = getById(id);
+        if (!t) return false;
+        t->setStatus(newStatus);
+        return true;
+    }
 
-        // Ticket status change, not implemented yet
-        void updateTicketStatus(int id, Status newStatus) {
-            cout << "Ticket status changed.\n";
-        }
+    // convenience to fetch by index
+    Ticket* getByIndex(int idx) {
+        if (idx < 0 || static_cast<size_t>(idx) >= mTickets.size()) return nullptr;
+        return &mTickets[static_cast<size_t>(idx)];
+    }
 };
 
 class Client {
