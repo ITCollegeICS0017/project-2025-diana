@@ -40,16 +40,12 @@ bool TicketService::completePurchase(const std::string& passport, int ticketId, 
 }
 
 
+
+RefundPolicy mPolicy; // Add as member in TicketService
 float TicketService::calculateRefund(float ticketCost, int daysBeforeTravel) const {
-    float penaltyPercent = 0.0f;
-    if (daysBeforeTravel >= 30) penaltyPercent = 0.01f;
-    else if (daysBeforeTravel >= 15) penaltyPercent = 0.05f;
-    else if (daysBeforeTravel >= 3) penaltyPercent = 0.10f;
-    else if (daysBeforeTravel >= 0) penaltyPercent = 0.30f;
-    else penaltyPercent = 1.0f;
-    float refund = ticketCost * (1.0f - penaltyPercent);
-    return round2(refund);
+    return round2(mPolicy.calculateRefund(ticketCost, daysBeforeTravel));
 }
+
 
 bool TicketService::completeReturn(const std::string& passport, int ticketId, std::string& outMessage) {
     Ticket* t = mTicketRepo.getById(ticketId);
