@@ -2,6 +2,7 @@
 #include "Repositories.h"
 #include "Transaction.h"
 #include "IClock.h"
+#include "RefundPolicy.h"
 #include <vector>
 #include <string>
 #include <optional>
@@ -26,5 +27,7 @@ private:
     PassengerRepository& mPassengerRepo;
     std::vector<Transaction> mRegistry;
     const IClock& mClock;
+
+    RefundPolicy mPolicy;
 };
 

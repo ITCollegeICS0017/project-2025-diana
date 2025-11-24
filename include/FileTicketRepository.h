@@ -2,6 +2,7 @@
 #pragma once
 #include "IRepository.h"
 #include "Ticket.h"
+#include "Errors.h"
 #include <fstream>
 #include <string>
 #include <vector>
