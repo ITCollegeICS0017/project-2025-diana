@@ -4,6 +4,7 @@
 #include "Ticket.h"
 #include <fstream>
 #include <string>
+#include <vector>
 
 class FileTicketRepository : public IRepository<Ticket> {
 public:
@@ -14,13 +15,12 @@ public:
 
     void save() override {
         std::ofstream out(mFilePath);
+        if (!out.is_open()) throw RepositoryException("Cannot open file: " + mFilePath);
         out << "# Ticket Repository\n";
         for (const auto& t : mTickets) out << t.toCSV() << "\n";
     }
 
-    void load() override {
-        // TODO: parse CSV and populate mTickets
-    }
+    void load() override;  // Implemented in .cpp
 
 private:
     std::string mFilePath;

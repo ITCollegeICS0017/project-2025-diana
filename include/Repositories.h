@@ -22,6 +22,7 @@ public:
     void addTrain(const std::string& /*trainId*/);
 };
 
+
 class PassengerRepository {
 public:
     void addPassenger(const std::string& passport, float balance);
@@ -29,12 +30,20 @@ public:
     float getBalance(const std::string& passport) const;
     void addPurchasedTicket(const std::string& passport, int ticketId);
     std::vector<int> getPurchasedTickets(const std::string& passport) const;
+
     struct PassengerRecord {
         std::string passport;
         float balance;
         std::vector<int> purchasedTickets;
     };
+
     PassengerRecord* getPassenger(const std::string& passport);
+
+    // NEW persistence methods
+    void save(const std::string& path) const;
+    void load(const std::string& path);
+
 private:
     std::vector<PassengerRecord> mPassengers;
 };
+

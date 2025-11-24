@@ -3,6 +3,11 @@
 #include "Util.h"
 #include <algorithm>
 #include <cmath>
+#include "Errors.h"
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+
 
 TicketService::TicketService(TicketRepository& tr, PassengerRepository& pr, const IClock& clock)
     : mTicketRepo(tr), mPassengerRepo(pr), mClock(clock) {}
@@ -84,3 +89,52 @@ float TicketService::dailyProfit() const {
     }
     return round2(profit);
 }
+
+
+// --- TicketService registry persistence ---
+
+void TicketService::saveRegistry(const std::string& path) const {
+    std::ofstream out(path);
+    if (!out.is_open()) {
+        throw RepositoryException("Cannot open file: " + path);
+    }
+
+    out << "# Transaction Registry\n";
+    for (const auto& tx : mRegistry) {
+        out << tx.ticketId << ","
+            << tx.operation << ","
+            << tx.timestamp << ","
+            << std::fixed << std::setprecision(2) << tx.amount
+            << "\n";
+    }
+}
+
+void TicketService::loadRegistry(const std::string& path) {
+    std::ifstream in(path);
+    if (!in.is_open()) {
+        throw RepositoryException("Cannot open file: " + path);
+    }
+
+    mRegistry.clear();
+    std::string line;
+
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] == '#') continue;
+
+        std::stringstream ss(line);
+        Transaction tx;
+        std::string tmp;
+
+        std::getline(ss, tmp, ',');
+        tx.ticketId = std::stoi(tmp);
+
+        std::getline(ss, tx.operation, ',');
+        std::getline(ss, tx.timestamp, ',');
+
+        std::getline(ss, tmp, ',');
+        tx.amount = std::stof(tmp);
+
+        mRegistry.push_back(tx);
+    }
+}
+

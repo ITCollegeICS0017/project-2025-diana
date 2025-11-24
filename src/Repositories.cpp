@@ -1,5 +1,10 @@
 #include "Repositories.h"
 #include <algorithm>
+#include "Errors.h"
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+
 
 // TicketRepository
 void TicketRepository::addTicket(const Ticket& t) {
@@ -80,4 +85,56 @@ void PassengerRepository::addPurchasedTicket(const std::string& passport, int ti
 std::vector<int> PassengerRepository::getPurchasedTickets(const std::string& passport) const {
     for (const auto& p : mPassengers) if (p.passport == passport) return p.purchasedTickets;
     return {};
+}
+
+
+// --- PassengerRepository persistence ---
+
+void PassengerRepository::save(const std::string& path) const {
+    std::ofstream out(path);
+    if (!out.is_open()) {
+        throw RepositoryException("Cannot open file: " + path);
+    }
+
+    out << "# Passenger Repository\n";
+    for (const auto& p : mPassengers) {
+        out << p.passport << "," << std::fixed << std::setprecision(2) << p.balance;
+        for (int tid : p.purchasedTickets) {
+            out << "," << tid;
+        }
+        out << "\n";
+    }
+}
+
+void PassengerRepository::load(const std::string& path) {
+    std::ifstream in(path);
+    if (!in.is_open()) {
+        throw RepositoryException("Cannot open file: " + path);
+    }
+
+    mPassengers.clear();
+    std::string line;
+
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] == '#') continue;
+
+        std::stringstream ss(line);
+        PassengerRecord rec;
+        rec.purchasedTickets.clear();
+
+        std::string balanceStr;
+        std::getline(ss, rec.passport, ',');
+        std::getline(ss, balanceStr, ',');
+
+        rec.balance = std::stof(balanceStr);
+
+        std::string tidStr;
+        while (std::getline(ss, tidStr, ',')) {
+            if (!tidStr.empty()) {
+                rec.purchasedTickets.push_back(std::stoi(tidStr));
+            }
+        }
+
+        mPassengers.push_back(std::move(rec));
+    }
 }
