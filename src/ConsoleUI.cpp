@@ -15,6 +15,8 @@ void ConsoleUI::showMainMenu() {
     std::cout << "4) Purchase Ticket\n";
     std::cout << "5) Return Ticket\n";
     std::cout << "6) Show Registry & Profit\n";
+    std::cout << "7) View Passenger Profile\n";
+    std::cout << "8) Add Funds to Passenger\n";
     std::cout << "0) Exit\n";
 }
 
@@ -125,6 +127,55 @@ void ConsoleUI::showRegistryAndProfit() {
     std::cout << "Daily profit: " << std::fixed << std::setprecision(2) << mService.dailyProfit() << " EUR\n";
 }
 
+void ConsoleUI::viewPassengerProfile() {
+    std::string passport;
+    std::cout << "Enter passport ID: ";
+    std::getline(std::cin, passport);
+    auto* p = mPassengerRepo.getPassenger(passport);
+    if (!p) {
+        std::cout << "Passenger not found.\n";
+        return;
+    }
+    std::cout << "--- Passenger Profile ---\n";
+    std::cout << "Passport: " << p->passport << "\n";
+    std::cout << "Balance: " << std::fixed << std::setprecision(2) << p->balance << " EUR\n";
+    std::cout << "Purchased Tickets: ";
+    if (p->purchasedTickets.empty()) {
+        std::cout << "None\n";
+    }
+    else {
+        for (int tid : p->purchasedTickets) std::cout << tid << " ";
+        std::cout << "\n";
+    }
+}
+
+void ConsoleUI::addFunds() {
+    std::string passport;
+    std::cout << "Enter passport ID: ";
+    std::getline(std::cin, passport);
+    auto* p = mPassengerRepo.getPassenger(passport);
+    if (!p) {
+        std::cout << "Passenger not found.\n";
+        return;
+    }
+    std::string amountStr;
+    std::cout << "Enter amount to add: ";
+    std::getline(std::cin, amountStr);
+    try {
+        float amount = std::stof(amountStr);
+        if (amount <= 0.0f) { std::cout << "Amount must be positive.\n"; return; }
+        if (!mPassengerRepo.adjustBalance(passport, amount)) {
+            std::cout << "Failed to add funds.\n";
+        }
+        else {
+            std::cout << "Funds added. New balance: " << std::fixed << std::setprecision(2) << p->balance << " EUR\n";
+        }
+    }
+    catch (...) {
+        std::cout << "Invalid amount.\n";
+    }
+}
+
 void ConsoleUI::run() {
     while (true) {
         showMainMenu();
@@ -138,6 +189,8 @@ void ConsoleUI::run() {
         else if (opt == "4") purchaseFlow();
         else if (opt == "5") returnFlow();
         else if (opt == "6") showRegistryAndProfit();
+        else if (opt == "7") viewPassengerProfile();
+        else if (opt == "8") addFunds();
         else std::cout << "Unknown option\n";
         std::cout << "\n";
     }
