@@ -1,35 +1,20 @@
-CXX = g++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++17 -Iinclude
-LDFLAGS =
 
-SRC_DIR = src
-SRC = $(wildcard $(SRC_DIR)/*.cpp)
-OBJ = $(patsubst $(SRC_DIR)/%.cpp,$(SRC_DIR)/%.o,$(SRC))
-BIN = app
-TEST_BIN = ticket_tests
-TEST_SRC = tests/tests.cpp
-INCLUDES = include
+CC = g++
+CFLAGS = -std=c++17 -Wall -Wextra
+TARGET = RailwayApp
+SRCS = main.cpp ConsoleUI.cpp TicketService.cpp Repositories.cpp Employee.cpp IClock.cpp Ticket.cpp Types.cpp Util.cpp FileTicketRepository.cpp RefundPolicy.cpp
+OBJS = $(SRCS:.cpp=.o)
 
-.PHONY: all run test clean
+all: $(TARGET)
 
-all: $(BIN)
+$(TARGET): $(OBJS)
+    $(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
 
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
-    $(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BIN): $(OBJ)
-    $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
-
-
-run: $(BIN)
-    ./$(BIN)
-
-# Build a test executable
-$(TEST_BIN): $(OBJ) $(TEST_SRC)
-    $(CXX) $(CXXFLAGS) -o $@ $(filter-out $(SRC_DIR)/main.o,$(OBJ)) $(TEST_SRC)
-
-test: $(TEST_BIN)
-    ./$(TEST_BIN)
+%.o: %.cpp
+    $(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-    rm -f $(BIN) $(TEST_BIN) $(SRC_DIR)/*.o
+    rm -f $(OBJS) $(TARGET)
+
+run: all
+    ./$(TARGET)
