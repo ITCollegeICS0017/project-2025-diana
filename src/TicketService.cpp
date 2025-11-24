@@ -11,33 +11,34 @@ std::vector<int> TicketService::searchAvailable(const std::string& destination, 
     return mTicketRepo.findAvailable(destination, date, coachFilter);
 }
 
+
 bool TicketService::completePurchase(const std::string& passport, int ticketId, std::string& outMessage) {
     Ticket* t = mTicketRepo.getById(ticketId);
     if (!t) { outMessage = "Ticket not found"; return false; }
-    if (t->getStatus() != Status::Available) { outMessage = "Ticket not available"; return false; }
-    t->setStatus(Status::Reserved);
 
-    auto* p = mPassengerRepo.getPassenger(passport);
-    if (!p) { t->setStatus(Status::Available); outMessage = "Passenger not registered"; return false; }
+    try {
+        t->setStatus(Status::Reserved);
+        auto* p = mPassengerRepo.getPassenger(passport);
+        if (!p) throw std::runtime_error("Passenger not registered");
+        float cost = t->getCost();
+        if (p->balance < cost) throw std::runtime_error("Insufficient funds");
 
-    float cost = t->getCost();
-    if (p->balance < cost) { t->setStatus(Status::Available); outMessage = "Insufficient funds"; return false; }
+        if (!mPassengerRepo.adjustBalance(passport, -cost)) throw std::runtime_error("Balance adjust failed");
+        t->setStatus(Status::Sold);
+        mPassengerRepo.addPurchasedTicket(passport, ticketId);
 
-    if (!mPassengerRepo.adjustBalance(passport, -cost)) { t->setStatus(Status::Available); outMessage = "Balance adjust failed"; return false; }
-
-    t->setStatus(Status::Sold);
-    mPassengerRepo.addPurchasedTicket(passport, ticketId);
-
-    Transaction tx;
-    tx.ticketId = ticketId;
-    tx.operation = "purchase";
-    tx.timestamp = mClock.nowISO();
-    tx.amount = cost;
-    mRegistry.push_back(tx);
-
-    outMessage = "Purchase completed";
-    return true;
+        Transaction tx{ ticketId, "purchase", mClock.nowISO(), cost };
+        mRegistry.push_back(tx);
+        outMessage = "Purchase completed";
+        return true;
+    }
+    catch (const std::exception& ex) {
+        t->setStatus(Status::Available); // rollback
+        outMessage = std::string("Purchase failed: ") + ex.what();
+        return false;
+    }
 }
+
 
 float TicketService::calculateRefund(float ticketCost, int daysBeforeTravel) const {
     float penaltyPercent = 0.0f;
