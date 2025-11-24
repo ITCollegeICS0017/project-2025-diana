@@ -1,22 +1,21 @@
 #include "ConsoleUI.h"
 #include "Monitoring.h"
+#include "Validation.h"
 #include <iostream>
 #include <string>
 #include <optional>
+#include <iomanip>
 
 ConsoleUI::ConsoleUI(TicketRepository& tr, PassengerRepository& pr, TicketService& svc)
     : mTicketRepo(tr), mPassengerRepo(pr), mService(svc) {}
-
 
 void ConsoleUI::setOnPassengerDataChanged(std::function<void()> cb) {
     mOnPassengerDataChanged = std::move(cb);
 }
 
-
 void ConsoleUI::notifyPassengerDataChanged() {
     if (mOnPassengerDataChanged) mOnPassengerDataChanged();
 }
-
 
 void ConsoleUI::showMainMenu() {
     std::cout << "=== Railway Ticket Sales (CLI) ===\n";
@@ -48,16 +47,32 @@ void ConsoleUI::searchAvailable() {
     std::getline(std::cin, dest);
     std::cout << "Date (YYYY-MM-DD, leave empty to match any): ";
     std::getline(std::cin, date);
+
+    if (!date.empty()) {
+        auto dateVal = Validator::validateISODate(date);
+        if (!dateVal.ok) {
+            std::cout << "[Validation Warning] " << dateVal.message << " — ignoring date filter.\n";
+            date.clear();
+        }
+    }
+
     std::cout << "Coach filter (Sleeper/Compartment/Economy/FirstClass or leave empty): ";
     std::string coachStr;
     std::getline(std::cin, coachStr);
     std::optional<Coach> cf = std::nullopt;
     if (!coachStr.empty()) {
-        if (coachStr == "Sleeper") cf = Coach::Sleeper;
-        else if (coachStr == "Compartment") cf = Coach::Compartment;
-        else if (coachStr == "Economy") cf = Coach::Economy;
-        else if (coachStr == "FirstClass") cf = Coach::FirstClass;
+        auto coachVal = Validator::validateCoach(coachStr);
+        if (!coachVal.ok) {
+            std::cout << "[Validation Warning] " << coachVal.message << " — ignoring coach filter.\n";
+        }
+        else {
+            if (coachStr == "Sleeper") cf = Coach::Sleeper;
+            else if (coachStr == "Compartment") cf = Coach::Compartment;
+            else if (coachStr == "Economy") cf = Coach::Economy;
+            else if (coachStr == "FirstClass") cf = Coach::FirstClass;
+        }
     }
+
     auto indices = mService.searchAvailable(dest, date, cf);
     if (indices.empty()) {
         std::cout << "No available tickets match the filters.\n";
@@ -73,29 +88,40 @@ void ConsoleUI::searchAvailable() {
         if (t.getStatus() == Status::Available) ++availableCount;
     }
     Monitoring::checkTicketAvailability(availableCount);
-
 }
 
 void ConsoleUI::registerPassenger() {
     std::string passport;
     std::cout << "Enter passport id (alnum, min 4 chars): ";
     std::getline(std::cin, passport);
-    if (passport.size() < 4) {
-        std::cout << "Invalid passport format.\n";
+
+    auto passportValidation = Validator::validatePassport(passport);
+    if (!passportValidation.ok) {
+        std::cout << "[Validation Error] " << passportValidation.message << "\n";
         return;
     }
+
     std::string balStr;
     std::cout << "Initial balance (EUR): ";
     std::getline(std::cin, balStr);
     float bal = 0.0f;
     try {
         bal = std::stof(balStr);
-        if (bal < 0.0f) { std::cout << "Balance cannot be negative.\n"; return; }
-    } catch (...) {
-        std::cout << "Invalid amount.\n"; return;
     }
+    catch (...) {
+        std::cout << "[Validation Error] Invalid amount format.\n";
+        return;
+    }
+
+    auto amountValidation = Validator::validateAmount(bal);
+    if (!amountValidation.ok) {
+        std::cout << "[Validation Error] " << amountValidation.message << "\n";
+        return;
+    }
+
     mPassengerRepo.addPassenger(passport, bal);
-    std::cout << "Passenger registered: " << passport << " balance: " << std::fixed << std::setprecision(2) << bal << "\n";
+    std::cout << "Passenger registered: " << passport << " balance: "
+        << std::fixed << std::setprecision(2) << bal << "\n";
     Monitoring::checkBalance(bal);
     notifyPassengerDataChanged();
 }
@@ -104,10 +130,32 @@ void ConsoleUI::purchaseFlow() {
     std::string passport;
     std::cout << "Passenger passport: ";
     std::getline(std::cin, passport);
+
+    auto passportValidation = Validator::validatePassport(passport);
+    if (!passportValidation.ok) {
+        std::cout << "[Validation Error] " << passportValidation.message << "\n";
+        return;
+    }
+
     std::string ticketIdStr;
     std::cout << "Ticket ID to purchase: ";
     std::getline(std::cin, ticketIdStr);
-    int ticketId = std::stoi(ticketIdStr);
+
+    int ticketId = 0;
+    try {
+        ticketId = std::stoi(ticketIdStr);
+    }
+    catch (...) {
+        std::cout << "[Validation Error] Ticket ID must be a number.\n";
+        return;
+    }
+
+    auto ticketValidation = Validator::validateTicketId(ticketId);
+    if (!ticketValidation.ok) {
+        std::cout << "[Validation Error] " << ticketValidation.message << "\n";
+        return;
+    }
+
     std::string msg;
     bool ok = mService.completePurchase(passport, ticketId, msg);
     if (ok) {
@@ -122,16 +170,37 @@ void ConsoleUI::returnFlow() {
     std::string passport;
     std::cout << "Passenger passport: ";
     std::getline(std::cin, passport);
+
+    auto passportValidation = Validator::validatePassport(passport);
+    if (!passportValidation.ok) {
+        std::cout << "[Validation Error] " << passportValidation.message << "\n";
+        return;
+    }
+
     std::string ticketIdStr;
     std::cout << "Ticket ID to return: ";
     std::getline(std::cin, ticketIdStr);
-    int ticketId = std::stoi(ticketIdStr);
+
+    int ticketId = 0;
+    try {
+        ticketId = std::stoi(ticketIdStr);
+    }
+    catch (...) {
+        std::cout << "[Validation Error] Ticket ID must be a number.\n";
+        return;
+    }
+
+    auto ticketValidation = Validator::validateTicketId(ticketId);
+    if (!ticketValidation.ok) {
+        std::cout << "[Validation Error] " << ticketValidation.message << "\n";
+        return;
+    }
+
     std::string msg;
     bool ok = mService.completeReturn(passport, ticketId, msg);
     if (ok) {
         notifyPassengerDataChanged();
     }
-
     std::cout << msg << "\n";
 }
 
@@ -139,15 +208,18 @@ void ConsoleUI::showRegistryAndProfit() {
     auto regs = mService.getRegistry();
     std::cout << "--- Transaction Registry ---\n";
     for (const auto& r : regs) {
-        std::cout << "Ticket " << r.ticketId << " " << r.operation << " " << r.timestamp << " amount: " << std::fixed << std::setprecision(2) << r.amount << "\n";
+        std::cout << "Ticket " << r.ticketId << " " << r.operation << " " << r.timestamp
+            << " amount: " << std::fixed << std::setprecision(2) << r.amount << "\n";
     }
-    std::cout << "Daily profit: " << std::fixed << std::setprecision(2) << mService.dailyProfit() << " EUR\n";
+    std::cout << "Daily profit: " << std::fixed << std::setprecision(2)
+        << mService.dailyProfit() << " EUR\n";
 }
 
 void ConsoleUI::viewPassengerProfile() {
     std::string passport;
     std::cout << "Enter passport ID: ";
     std::getline(std::cin, passport);
+
     auto* p = mPassengerRepo.getPassenger(passport);
     if (!p) {
         std::cout << "Passenger not found.\n";
@@ -178,19 +250,30 @@ void ConsoleUI::addFunds() {
     std::string amountStr;
     std::cout << "Enter amount to add: ";
     std::getline(std::cin, amountStr);
+
+    float amount = 0.0f;
     try {
-        float amount = std::stof(amountStr);
-        if (amount <= 0.0f) { std::cout << "Amount must be positive.\n"; return; }
-        if (!mPassengerRepo.adjustBalance(passport, amount)) {
-            std::cout << "Failed to add funds.\n";
-        }
-        else {
-            std::cout << "Funds added. New balance: " << std::fixed << std::setprecision(2) << p->balance << " EUR\n";
-            notifyPassengerDataChanged();
-        }
+        amount = std::stof(amountStr);
     }
     catch (...) {
-        std::cout << "Invalid amount.\n";
+        std::cout << "[Validation Error] Invalid amount format.\n";
+        return;
+    }
+
+    auto amountValidation = Validator::validateAmount(amount);
+    if (!amountValidation.ok) {
+        std::cout << "[Validation Error] " << amountValidation.message << "\n";
+        return;
+    }
+
+    if (!mPassengerRepo.adjustBalance(passport, amount)) {
+        std::cout << "Failed to add funds.\n";
+    }
+    else {
+        std::cout << "Funds added. New balance: " << std::fixed << std::setprecision(2)
+            << p->balance << " EUR\n";
+        Monitoring::checkBalance(p->balance);
+        notifyPassengerDataChanged();
     }
 }
 

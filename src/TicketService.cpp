@@ -1,13 +1,13 @@
 #include "TicketService.h"
 #include "Repositories.h"
 #include "Util.h"
+#include "Errors.h"
 #include <algorithm>
 #include <cmath>
-#include "Errors.h"
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-
+#include <stdexcept>
 
 TicketService::TicketService(TicketRepository& tr, PassengerRepository& pr, const IClock& clock)
     : mTicketRepo(tr), mPassengerRepo(pr), mClock(clock) {}
@@ -15,7 +15,6 @@ TicketService::TicketService(TicketRepository& tr, PassengerRepository& pr, cons
 std::vector<int> TicketService::searchAvailable(const std::string& destination, const std::string& date, std::optional<Coach> coachFilter) {
     return mTicketRepo.findAvailable(destination, date, coachFilter);
 }
-
 
 bool TicketService::completePurchase(const std::string& passport, int ticketId, std::string& outMessage) {
     Ticket* t = mTicketRepo.getById(ticketId);
@@ -44,13 +43,9 @@ bool TicketService::completePurchase(const std::string& passport, int ticketId, 
     }
 }
 
-
-
-RefundPolicy mPolicy; // Add as member in TicketService
 float TicketService::calculateRefund(float ticketCost, int daysBeforeTravel) const {
     return round2(mPolicy.calculateRefund(ticketCost, daysBeforeTravel));
 }
-
 
 bool TicketService::completeReturn(const std::string& passport, int ticketId, std::string& outMessage) {
     Ticket* t = mTicketRepo.getById(ticketId);
@@ -67,6 +62,7 @@ bool TicketService::completeReturn(const std::string& passport, int ticketId, st
     if (!mPassengerRepo.adjustBalance(passport, refund)) { outMessage = "Balance refund failed"; return false; }
 
     t->setStatus(Status::Available);
+    mPassengerRepo.removePurchasedTicket(passport, ticketId);
 
     Transaction tx;
     tx.ticketId = ticketId;
@@ -90,51 +86,29 @@ float TicketService::dailyProfit() const {
     return round2(profit);
 }
 
-
-// --- TicketService registry persistence ---
-
 void TicketService::saveRegistry(const std::string& path) const {
     std::ofstream out(path);
-    if (!out.is_open()) {
-        throw RepositoryException("Cannot open file: " + path);
-    }
-
+    if (!out.is_open()) throw RepositoryException("Cannot open file: " + path);
     out << "# Transaction Registry\n";
     for (const auto& tx : mRegistry) {
-        out << tx.ticketId << ","
-            << tx.operation << ","
-            << tx.timestamp << ","
-            << std::fixed << std::setprecision(2) << tx.amount
-            << "\n";
+        out << tx.ticketId << "," << tx.operation << "," << tx.timestamp << "," << std::fixed << std::setprecision(2) << tx.amount << "\n";
     }
 }
 
 void TicketService::loadRegistry(const std::string& path) {
     std::ifstream in(path);
-    if (!in.is_open()) {
-        throw RepositoryException("Cannot open file: " + path);
-    }
-
+    if (!in.is_open()) throw RepositoryException("Cannot open file: " + path);
     mRegistry.clear();
     std::string line;
-
     while (std::getline(in, line)) {
         if (line.empty() || line[0] == '#') continue;
-
         std::stringstream ss(line);
         Transaction tx;
         std::string tmp;
-
-        std::getline(ss, tmp, ',');
-        tx.ticketId = std::stoi(tmp);
-
+        std::getline(ss, tmp, ','); tx.ticketId = std::stoi(tmp);
         std::getline(ss, tx.operation, ',');
         std::getline(ss, tx.timestamp, ',');
-
-        std::getline(ss, tmp, ',');
-        tx.amount = std::stof(tmp);
-
+        std::getline(ss, tmp, ','); tx.amount = std::stof(tmp);
         mRegistry.push_back(tx);
     }
 }
-
