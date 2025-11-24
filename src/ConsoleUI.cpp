@@ -7,6 +7,17 @@
 ConsoleUI::ConsoleUI(TicketRepository& tr, PassengerRepository& pr, TicketService& svc)
     : mTicketRepo(tr), mPassengerRepo(pr), mService(svc) {}
 
+
+void ConsoleUI::setOnPassengerDataChanged(std::function<void()> cb) {
+    mOnPassengerDataChanged = std::move(cb);
+}
+
+
+void ConsoleUI::notifyPassengerDataChanged() {
+    if (mOnPassengerDataChanged) mOnPassengerDataChanged();
+}
+
+
 void ConsoleUI::showMainMenu() {
     std::cout << "=== Railway Ticket Sales (CLI) ===\n";
     std::cout << "1) List Tickets\n";
@@ -86,6 +97,7 @@ void ConsoleUI::registerPassenger() {
     mPassengerRepo.addPassenger(passport, bal);
     std::cout << "Passenger registered: " << passport << " balance: " << std::fixed << std::setprecision(2) << bal << "\n";
     Monitoring::checkBalance(bal);
+    notifyPassengerDataChanged();
 }
 
 void ConsoleUI::purchaseFlow() {
@@ -101,6 +113,7 @@ void ConsoleUI::purchaseFlow() {
     if (ok) {
         float newBalance = mPassengerRepo.getBalance(passport);
         Monitoring::checkBalance(newBalance);
+        notifyPassengerDataChanged();
     }
     std::cout << msg << "\n";
 }
@@ -115,6 +128,10 @@ void ConsoleUI::returnFlow() {
     int ticketId = std::stoi(ticketIdStr);
     std::string msg;
     bool ok = mService.completeReturn(passport, ticketId, msg);
+    if (ok) {
+        notifyPassengerDataChanged();
+    }
+
     std::cout << msg << "\n";
 }
 
@@ -169,6 +186,7 @@ void ConsoleUI::addFunds() {
         }
         else {
             std::cout << "Funds added. New balance: " << std::fixed << std::setprecision(2) << p->balance << " EUR\n";
+            notifyPassengerDataChanged();
         }
     }
     catch (...) {

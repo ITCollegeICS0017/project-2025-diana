@@ -5,6 +5,7 @@
 class ConsoleUI {
 public:
     ConsoleUI(TicketRepository& tr, PassengerRepository& pr, TicketService& svc);
+    void setOnPassengerDataChanged(std::function<void()> cb);
     void run();
 
 private:
@@ -15,8 +16,14 @@ private:
     void purchaseFlow();
     void returnFlow();
     void showRegistryAndProfit();
+    void viewPassengerProfile();
+    void addFunds();
+
+    void notifyPassengerDataChanged();
 
     TicketRepository& mTicketRepo;
     PassengerRepository& mPassengerRepo;
     TicketService& mService;
+
+    std::function<void()> mOnPassengerDataChanged;
 };
