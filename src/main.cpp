@@ -1,4 +1,4 @@
-
+﻿
 #include "Config.h"
 #include "Util.h"
 #include "Ticket.h"
@@ -13,162 +13,91 @@
 #include <iostream>
 #include <memory>
 
-// Forward-declared factory from IClock.cpp
 std::unique_ptr<IClock> makeSimpleClock();
-
-static void hydrateTicketRepoFromFile(FileTicketRepository& fileRepo, TicketRepository& memRepo) {
-    // Clear and re-populate in-memory repository from durable file repository
-    for (const auto& t : fileRepo.listAll()) {
-        memRepo.addTicket(t);
-    }
-}
-
-static void persistTicketRepoToFile(const TicketRepository& memRepo, FileTicketRepository& fileRepo) {
-    // Copy current in-memory repository tickets into file repository and save
-    // (We recreate fileRepo's internal list to match memRepo)
-    // NOTE: FileTicketRepository::add() appends; if you want replace semantics, you could add a clear method.
-    // For now, we rebuild a fresh instance per save or assume mTickets is replaced by re-constructing fileRepo.
-    FileTicketRepository fresh(fileRepo); // Not valid copy-ctor�so do manual rebuild:
-    // Workaround: reconstruct the file repo by clearing internal list via load from empty or just reassign:
-    // Simpler approach: create a new file repo with same path, add all tickets, then call save().
-    // We'll implement that here:
-    FileTicketRepository sink(fileRepo); // placeholder comment; see below
-}
 
 int main() {
     try {
-        // --- Configure persistence file paths ---
         const std::string ticketsFile = "tickets.csv";
         const std::string passengersFile = "passengers.csv";
         const std::string registryFile = "transactions.csv";
-        const std::string refundPolicyFile = "refund_policy.csv"; // optional external policy
 
-        // --- Construct repositories and services (in-memory) ---
-        TicketRepository   ticketRepo;
-        TrainRepository    trainRepo;
+        TicketRepository ticketRepo;
         PassengerRepository passengerRepo;
-
         auto clock = makeSimpleClock();
         TicketService ticketService(ticketRepo, passengerRepo, *clock);
 
-        // --- Tickets: load from file-backed repository then hydrate in-memory ---
-        bool ticketsLoaded = false;
+        // --- Load persisted data (same as before) ---
         try {
             FileTicketRepository fileTicketRepo(ticketsFile);
             fileTicketRepo.load();
-            hydrateTicketRepoFromFile(fileTicketRepo, ticketRepo);
+            for (const auto& t : fileTicketRepo.listAll()) ticketRepo.addTicket(t);
             std::cout << "Loaded tickets from " << ticketsFile << "\n";
-            ticketsLoaded = true;
         }
-        catch (const RepositoryException& ex) {
-            std::cout << "Ticket load warning: " << ex.what() << "\n";
-        }
-        catch (const std::exception& ex) {
-            std::cout << "Ticket load unexpected error: " << ex.what() << "\n";
-        }
-
-        // Bootstrap sample tickets on first run (if not loaded)
-        if (!ticketsLoaded) {
+        catch (...) {
+            std::cout << "Tickets file missing; bootstrapping defaults...\n";
             ticketRepo.addTicket(Ticket(1, "2025-10-01", 50.0f, "Tallinn", Coach::Sleeper, Status::Available));
             ticketRepo.addTicket(Ticket(2, "2025-10-02", 30.0f, "Riga", Coach::Compartment, Status::Available));
             ticketRepo.addTicket(Ticket(3, "2025-10-01", 20.0f, "Tallinn", Coach::Economy, Status::Available));
-
-            // Persist initial dataset so future runs load from disk
-            try {
-                FileTicketRepository fileTicketRepo(ticketsFile);
-                for (const auto& t : ticketRepo.listAll()) fileTicketRepo.add(t);
-                fileTicketRepo.save();
-                std::cout << "Initialized tickets and saved to " << ticketsFile << "\n";
-            }
-            catch (const RepositoryException& ex) {
-                std::cerr << "Ticket bootstrap save error: " << ex.what() << "\n";
-            }
         }
 
-        // --- Passengers: load from CSV file or bootstrap default ---
-        bool passengersLoaded = false;
         try {
             passengerRepo.load(passengersFile);
             std::cout << "Loaded passengers from " << passengersFile << "\n";
-            passengersLoaded = true;
         }
-        catch (const RepositoryException& ex) {
-            std::cout << "Passenger load warning: " << ex.what() << "\n";
-        }
-        catch (const std::exception& ex) {
-            std::cout << "Passenger load unexpected error: " << ex.what() << "\n";
-        }
-
-        if (!passengersLoaded) {
+        catch (...) {
+            std::cout << "Passengers file missing; bootstrapping defaults...\n";
             passengerRepo.addPassenger("John", 100.0f);
-            try {
-                passengerRepo.save(passengersFile);
-                std::cout << "Initialized passengers and saved to " << passengersFile << "\n";
-            }
-            catch (const RepositoryException& ex) {
-                std::cerr << "Passenger bootstrap save error: " << ex.what() << "\n";
-            }
+            passengerRepo.save(passengersFile);
         }
 
-        // --- Transactions registry: load from CSV file (optional) ---
         try {
             ticketService.loadRegistry(registryFile);
             std::cout << "Loaded transactions from " << registryFile << "\n";
         }
-        catch (const RepositoryException& ex) {
-            std::cout << "Registry load warning: " << ex.what() << "\n";
-        }
-        catch (const std::exception& ex) {
-            std::cout << "Registry load unexpected error: " << ex.what() << "\n";
+        catch (...) {
+            std::cout << "No transaction registry found; starting fresh.\n";
         }
 
-        // --- Employees and UI ---
         Clerk clerk("Alice");
         Administrator admin("Bob");
         std::cout << "Employee created: " << clerk.name() << " role: " << clerk.role() << "\n";
         std::cout << "Employee created: " << admin.name() << " role: " << admin.role() << "\n";
 
         ConsoleUI ui(ticketRepo, passengerRepo, ticketService);
+
+        // ✅ Wire the persistence callback: save passengers immediately on changes
+        ui.setOnPassengerDataChanged(& {
+            try {
+                passengerRepo.save(passengersFile);
+                std::cout << "[Auto-Save] Passengers saved to " << passengersFile << "\n";
+            }
+ catch (const RepositoryException& ex) {
+  std::cerr << "[Auto-Save] Passenger save error: " << ex.what() << "\n";
+}
+catch (const std::exception& ex) {
+ std::cerr << "[Auto-Save] Unexpected save error: " << ex.what() << "\n";
+}
+            });
+
         ui.run();
 
-        // --- Shutdown: Save current state back to disk ---
-        // Save tickets (serialize from in-memory via FileTicketRepository)
+        // --- Shutdown saves (tickets/registry) remain as before ---
         try {
             FileTicketRepository fileTicketRepo(ticketsFile);
-            // Rebuild file repo content from current in-memory repository:
             for (const auto& t : ticketRepo.listAll()) fileTicketRepo.add(t);
             fileTicketRepo.save();
             std::cout << "Saved tickets to " << ticketsFile << "\n";
         }
-        catch (const RepositoryException& ex) {
+        catch (const std::exception& ex) {
             std::cerr << "Ticket save error: " << ex.what() << "\n";
         }
-        catch (const std::exception& ex) {
-            std::cerr << "Ticket save unexpected error: " << ex.what() << "\n";
-        }
 
-        // Save passengers
-        try {
-            passengerRepo.save(passengersFile);
-            std::cout << "Saved passengers to " << passengersFile << "\n";
-        }
-        catch (const RepositoryException& ex) {
-            std::cerr << "Passenger save error: " << ex.what() << "\n";
-        }
-        catch (const std::exception& ex) {
-            std::cerr << "Passenger save unexpected error: " << ex.what() << "\n";
-        }
-
-        // Save transaction registry
         try {
             ticketService.saveRegistry(registryFile);
             std::cout << "Saved transactions to " << registryFile << "\n";
         }
-        catch (const RepositoryException& ex) {
-            std::cerr << "Registry save error: " << ex.what() << "\n";
-        }
         catch (const std::exception& ex) {
-            std::cerr << "Registry save unexpected error: " << ex.what() << "\n";
+            std::cerr << "Registry save error: " << ex.what() << "\n";
         }
 
         std::cout << "Exiting application.\n";
