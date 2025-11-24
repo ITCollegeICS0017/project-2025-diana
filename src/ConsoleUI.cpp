@@ -21,6 +21,11 @@ void ConsoleUI::listTickets() {
     std::cout << "--- All Tickets ---\n";
     auto tlist = mTicketRepo.listAll();
     for (const auto& t : tlist) t.showDetails();
+    int availableCount = 0;
+    for (const auto& t : tlist) {
+        if (t.getStatus() == Status::Available) ++availableCount;
+    }
+    Monitoring::checkTicketAvailability(availableCount);
 }
 
 void ConsoleUI::searchAvailable() {
@@ -49,6 +54,12 @@ void ConsoleUI::searchAvailable() {
         Ticket* t = mTicketRepo.getByIndex(idx);
         if (t) t->showDetails();
     }
+    int availableCount = 0;
+    for (const auto& t : mTicketRepo.listAll()) {
+        if (t.getStatus() == Status::Available) ++availableCount;
+    }
+    Monitoring::checkTicketAvailability(availableCount);
+
 }
 
 void ConsoleUI::registerPassenger() {
@@ -71,6 +82,7 @@ void ConsoleUI::registerPassenger() {
     }
     mPassengerRepo.addPassenger(passport, bal);
     std::cout << "Passenger registered: " << passport << " balance: " << std::fixed << std::setprecision(2) << bal << "\n";
+    Monitoring::checkBalance(bal);
 }
 
 void ConsoleUI::purchaseFlow() {
@@ -83,6 +95,10 @@ void ConsoleUI::purchaseFlow() {
     int ticketId = std::stoi(ticketIdStr);
     std::string msg;
     bool ok = mService.completePurchase(passport, ticketId, msg);
+    if (ok) {
+        float newBalance = mPassengerRepo.getBalance(passport);
+        Monitoring::checkBalance(newBalance);
+    }
     std::cout << msg << "\n";
 }
 
