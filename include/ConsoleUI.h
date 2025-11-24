@@ -1,6 +1,7 @@
 #pragma once
 #include "Repositories.h"
 #include "TicketService.h"
+#include <functional>
 
 class ConsoleUI {
 public:

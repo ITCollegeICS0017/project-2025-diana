@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <memory>
+#include <functional>
 
 std::unique_ptr<IClock> makeSimpleClock();
 
@@ -26,7 +27,7 @@ int main() {
         auto clock = makeSimpleClock();
         TicketService ticketService(ticketRepo, passengerRepo, *clock);
 
-        // --- Load persisted data (same as before) ---
+        // --- Load tickets ---
         try {
             FileTicketRepository fileTicketRepo(ticketsFile);
             fileTicketRepo.load();
@@ -40,6 +41,7 @@ int main() {
             ticketRepo.addTicket(Ticket(3, "2025-10-01", 20.0f, "Tallinn", Coach::Economy, Status::Available));
         }
 
+        // --- Load passengers ---
         try {
             passengerRepo.load(passengersFile);
             std::cout << "Loaded passengers from " << passengersFile << "\n";
@@ -50,6 +52,7 @@ int main() {
             passengerRepo.save(passengersFile);
         }
 
+        // --- Load transactions ---
         try {
             ticketService.loadRegistry(registryFile);
             std::cout << "Loaded transactions from " << registryFile << "\n";
@@ -65,23 +68,23 @@ int main() {
 
         ConsoleUI ui(ticketRepo, passengerRepo, ticketService);
 
-        // ✅ Wire the persistence callback: save passengers immediately on changes
-        ui.setOnPassengerDataChanged(& {
+        // ✅ Auto-save callback for passenger changes
+        ui.setOnPassengerDataChanged([&] {
             try {
                 passengerRepo.save(passengersFile);
                 std::cout << "[Auto-Save] Passengers saved to " << passengersFile << "\n";
             }
- catch (const RepositoryException& ex) {
-  std::cerr << "[Auto-Save] Passenger save error: " << ex.what() << "\n";
-}
-catch (const std::exception& ex) {
- std::cerr << "[Auto-Save] Unexpected save error: " << ex.what() << "\n";
-}
+            catch (const RepositoryException& ex) {
+                std::cerr << "[Auto-Save] Passenger save error: " << ex.what() << "\n";
+            }
+            catch (const std::exception& ex) {
+                std::cerr << "[Auto-Save] Unexpected save error: " << ex.what() << "\n";
+            }
             });
 
         ui.run();
 
-        // --- Shutdown saves (tickets/registry) remain as before ---
+        // --- Save tickets on shutdown ---
         try {
             FileTicketRepository fileTicketRepo(ticketsFile);
             for (const auto& t : ticketRepo.listAll()) fileTicketRepo.add(t);
@@ -92,6 +95,7 @@ catch (const std::exception& ex) {
             std::cerr << "Ticket save error: " << ex.what() << "\n";
         }
 
+        // --- Save transactions on shutdown ---
         try {
             ticketService.saveRegistry(registryFile);
             std::cout << "Saved transactions to " << registryFile << "\n";
