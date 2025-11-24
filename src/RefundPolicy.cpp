@@ -34,9 +34,13 @@ void RefundPolicy::loadFromFile(const std::string& path) {
 }
 
 float RefundPolicy::calculateRefund(float ticketCost, int daysBeforeTravel) const {
-    for (const auto& kv : mBrackets) {
-        if (daysBeforeTravel >= kv.first) {
-            return ticketCost * (1.0f - kv.second);
+    for (auto it = mBrackets.rbegin(); it != mBrackets.rend(); ++it) {
+        const int threshold = it->first;
+        const float penalty = it->second;
+
+        if (daysBeforeTravel >= threshold) {
+            const float refund = ticketCost * (1.0f - penalty);
+            return refund;
         }
     }
     throw std::runtime_error("Refund calculation failed");
