@@ -1,21 +1,20 @@
-CC=gcc
-CFLAGS=-Wall -Wextra -Werror -std=c11
-SRC=$(wildcard src/*.c)
-OBJ=$(SRC:.c=.o)
-BIN=app
 
-.PHONY: all run test clean
+CC = g++
+CFLAGS = -std=c++17 -Wall -Wextra
+TARGET = RailwayApp
+SRCS = main.cpp ConsoleUI.cpp TicketService.cpp Repositories.cpp Employee.cpp IClock.cpp Ticket.cpp Types.cpp Util.cpp FileTicketRepository.cpp RefundPolicy.cpp
+OBJS = $(SRCS:.cpp=.o)
 
-all: $(BIN)
+all: $(TARGET)
 
-$(BIN): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
+$(TARGET): $(OBJS)
+    $(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
 
-run: $(BIN)
-	./$(BIN)
-
-test: $(BIN) tests/test_basic.sh
-	bash tests/test_basic.sh
+%.o: %.cpp
+    $(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(BIN) src/*.o
+    rm -f $(OBJS) $(TARGET)
+
+run: all
+    ./$(TARGET)
