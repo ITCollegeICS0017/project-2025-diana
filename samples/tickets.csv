@@ -1,0 +1,16 @@
+# Ticket Repository
+1,2025-12-01,Vilnius,Sleeper,69.33,Available
+2,2025-12-02,Vilnius,Compartment,18.84,Sold
+3,2025-12-03,Warsaw,FirstClass,63.37,Available
+4,2025-12-04,Tallinn,Economy,16.44,Sold
+5,2025-12-05,Vilnius,Compartment,44.82,Sold
+6,2025-12-06,Tallinn,FirstClass,41.26,Sold
+7,2025-12-07,Vilnius,Economy,60.59,Available
+8,2025-12-08,Riga,Compartment,79.98,Available
+9,2025-12-09,Vilnius,FirstClass,17.96,Available
+10,2025-12-10,Helsinki,Economy,46.06,Sold
+11,2025-12-01,Helsinki,Compartment,38.11,Available
+12,2025-12-02,Tallinn,FirstClass,62.66,Available
+13,2025-12-03,Helsinki,Compartment,69.14,Sold
+14,2025-12-04,Warsaw,Compartment,56.47,Available
+15,2025-12-05,Helsinki,FirstClass,75.10,Available
