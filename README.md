@@ -18,14 +18,11 @@ At the end of the day, the cashier submits a report on sold and returned tickets
 central office.
 
 ## Current Limitations
-- No durable persistence (CSV/atomic writes).
 - No automated logging files.
-- No full TrainRepository schedules.
-- Error handling and input validation are minimal.
 These limitations will be addressed in upcoming releases.
 
 ## Build & Run
-Make sure you have `g++` (C++17 or newer) installed. If using Windows CMake, make sure your have `make`, `cmake` and a C++ toolchain: Visual Studio (MSVC) or MinGW-w64/MSYS2 (GCC).
+Make sure you have `g++` (C++17 or newer) installed. If using Windows CMake, make sure your have `make`, `cmake` and a C++ toolchain: Visual Studio (MSVC) or MinGW-w64/MSYS2 (GCC). Read *Populate the Repositories* section before the first startup of the application.
 
 To build and run:
 ```bash
@@ -34,32 +31,25 @@ make run
 ```powershell
 # from project root
 mkdir build
-Set-Location build
+cd build
 cmake ..
-cmake --build . --config App
-# run the executable (adjust path/name as needed)
-.\App\app.exe
+cmake --build . --config Release
+.\Release\RailwayApp.exe
 ```
 
-To run basic tests:
-```bash
-make test
-```
-
-To clean up build artifacts"
-```bash
-make clean
-```
+### Populate the Repositories
+If you want to simulate real operation, take .csv files from the `samples` directory and drop them into the same directory as the built .exe file. The application will read the necessary info from them - the refund policy and the ticket list.
 
 ### Folders for documents
-src/               # implementation files (part of Modular Design principle)
-include/           # public headers (part of Modular Design principle)
-tests/             # test programs
-docs/release-1/    # Release 1 materials (slides, report, updated SRS/SDS)
-docs/release-2/    # Release 2 materials (updated SRS/SDS, DLD)
-docs/release-3/
-docs/release-4/
-Makefile           # build commands
-README.md          # project description, team members, build/run instructions
-.gitignore         # ignore generated files, IDE configs, etc.
-
+├───docs
+│ ├───release-1 - Release 1 materials (slides, report, updated SRS/SDS)
+│ └───release-2 - Release 2 materials (updated SRS/SDS, DLD)
+│ └───release-3 - Release 3 materials (DLD R3)
+├───include - public headers (part of Modular Design principle)
+├───src - implementation files (part of Modular Design principle)
+├───samples - sample .csv files that the program can use
+└───tests - test programs
+Makefile - build commands
+CMakeList.txt - build commands
+README.md - project description, team members, build/run instructions
+.gitignore - ignore generated files, IDE configs, etc.
