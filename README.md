@@ -17,24 +17,51 @@ Data entered by the cashier are stored in a central database to prevent double s
 At the end of the day, the cashier submits a report on sold and returned tickets to the
 central office.
 
-## Build & Run
-Make sure you have `g++` (C++17 or newer) installed. If using Windows CMake, make sure your have `make`, `cmake` and a C++ toolchain: Visual Studio (MSVC) or MinGW-w64/MSYS2 (GCC). Read *Populate the Repositories* section before the first startup of the application.
+## Current Limitations
+- No automated logging files.
+- Single-user CLI application.
+These limitations were out of scope of the development releases.
 
-To build and run:
+## Build & Run
+### Requirements
+
+- C++17-compatible compiler (g++, MSVC, or MinGW)
+- One of the following build systems:
+    - Make
+    - CMake
+
+Read *Populate the Repositories* section before the first startup of the application.
+
+To build and run with make:
 ```bash
+# from project root
+make
+# generate sample data
+make generate
+# run the application
 make run
 ```
+
+To build and run with CMake:
 ```powershell
 # from project root
 mkdir build
 cd build
 cmake ..
 cmake --build . --config Release
-.\Release\RailwayApp.exe
+cd Release
+# generate sample data
+# use the following if you want to set a specific date from which the sample data will be generated:
+# (replace YYYY with year, MM with month, DD with day)
+# generator.exe YYYY-MM-DD
+generator.exe
+RailwayApp.exe
 ```
 
 ### Populate the Repositories
-If you want to simulate real operation, take .csv files from the `samples` directory and drop them into the same directory as the built .exe file. The application will read the necessary info from them - the refund policy and the ticket list.
+A separate executable (`generator`) is provided to generate tickets.csv and refund_policy.csv.
+
+The generator supports an explicit reference date (YYYY-MM-DD) to ensure deterministic testing of refund tiers.
 
 ## Folders for documents
 ├───docs
@@ -44,13 +71,12 @@ If you want to simulate real operation, take .csv files from the `samples` direc
 │ └───release-2 - Release 2 materials (updated SRS/SDS, DLD)
 
 │ └───release-3 - Release 3 materials (DLD R3)
-
+│ └───release-4 - Release 4 materials (DLD R4, completion report)
 ├───include - public headers (part of Modular Design principle)
 
 ├───src - implementation files (part of Modular Design principle)
-
-├───samples - sample .csv files that the program can use
-
+├───samples
+│ └───generate_samples.cpp - sample data generator code
 └───tests - test programs
 
 Makefile - build commands
