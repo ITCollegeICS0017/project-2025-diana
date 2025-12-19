@@ -10,22 +10,29 @@
 class SimpleClockImpl : public IClock {
 public:
     std::string nowISO() const override { return nowTimestamp(); }
-    int daysBetween(const std::string& dateIso) const override {
-        std::tm tmTarget = {};
-        if (std::sscanf(dateIso.c_str(), "%d-%d-%d", &tmTarget.tm_year, &tmTarget.tm_mon, &tmTarget.tm_mday) != 3) {
-            return -1;
-        }
-        tmTarget.tm_year -= 1900;
-        tmTarget.tm_mon -= 1;
-        tmTarget.tm_hour = 0; tmTarget.tm_min = 0; tmTarget.tm_sec = 0;
+    int IClock::daysBetween(const std::string& targetISO) const {
+        std::tm target{};
+        std::tm now{};
 
-        std::time_t tTarget = std::mktime(&tmTarget);
-        if (tTarget == -1) return -1;
+        sscanf(targetISO.c_str(), "%d-%d-%d",
+            &target.tm_year, &target.tm_mon, &target.tm_mday);
+
+        target.tm_year -= 1900;
+        target.tm_mon -= 1;
+        target.tm_hour = 0;
+        target.tm_min = 0;
+        target.tm_sec = 0;
 
         std::time_t tNow = std::time(nullptr);
-        double days = std::difftime(tTarget, tNow) / (60.0 * 60.0 * 24.0);
-        int result = static_cast<int>(std::floor(days + 0.5));
-        return (result < 0) ? 0 : result;
+        localtime_s(&now, &tNow);
+        now.tm_hour = 0;
+        now.tm_min = 0;
+        now.tm_sec = 0;
+
+        std::time_t tTarget = std::mktime(&target);
+        tNow = std::mktime(&now);
+
+        return static_cast<int>((tTarget - tNow) / (60 * 60 * 24));
     }
 };
 

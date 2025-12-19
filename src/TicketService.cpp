@@ -56,7 +56,6 @@ bool TicketService::completeReturn(const std::string& passport, int ticketId, st
     if (std::find(purchased.begin(), purchased.end(), ticketId) == purchased.end()) { outMessage = "Ticket not owned by passenger"; return false; }
 
     int days = mClock.daysBetween(t->getDate());
-    if (days < -1) { outMessage = "Invalid travel date"; return false; }
 
     float refund = calculateRefund(t->getCost(), days);
     if (!mPassengerRepo.adjustBalance(passport, refund)) { outMessage = "Balance refund failed"; return false; }
