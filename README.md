@@ -63,18 +63,24 @@ A separate executable (`generator`) is provided to generate tickets.csv and refu
 
 The generator supports an explicit reference date (YYYY-MM-DD) to ensure deterministic testing of refund tiers.
 
-### Folders for documents
+## Folders for documents
 ├───docs
+
 │ ├───release-1 - Release 1 materials (slides, report, updated SRS/SDS)
+
 │ └───release-2 - Release 2 materials (updated SRS/SDS, DLD)
+
 │ └───release-3 - Release 3 materials (DLD R3)
-│ └───release-3 - Release 3 materials (DLD R4, completion report)
+│ └───release-4 - Release 4 materials (DLD R4, completion report)
 ├───include - public headers (part of Modular Design principle)
+
 ├───src - implementation files (part of Modular Design principle)
 ├───samples
 │ └───generate_samples.cpp - sample data generator code
 └───tests - test programs
+
 Makefile - build commands
+
 CMakeList.txt - build commands
 README.md - project description, team members, build/run instructions
 .gitignore - ignore generated files, IDE configs, etc.
