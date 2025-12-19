@@ -12,3 +12,4 @@ include_directories(include)
 
 # Create executable
 add_executable(RailwayApp ${SOURCES})
+add_executable(generator samples/generate_samples.cpp)
