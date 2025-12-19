@@ -1,21 +1,52 @@
-CC=gcc
-CFLAGS=-Wall -Wextra -Werror -std=c11
-SRC=$(wildcard src/*.c)
-OBJ=$(SRC:.c=.o)
-BIN=app
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude
 
-.PHONY: all run test clean
+# Directories
+SRC_DIR = src
+SAMPLES_DIR = samples
+BUILD_DIR = build_make
 
-all: $(BIN)
+# Main app
+APP = RailwayApp
+APP_SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+APP_OBJS = $(APP_SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
-$(BIN): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
+# Generator
+GEN = generator
+GEN_SRC = $(SAMPLES_DIR)/generate_samples.cpp
+GEN_OBJ = $(BUILD_DIR)/generate_samples.o
 
-run: $(BIN)
-	./$(BIN)
+# Default target
+all: $(APP) $(GEN)
 
-test: $(BIN) tests/test_basic.sh
-	bash tests/test_basic.sh
+# Create build directory if missing
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
+# Build RailwayApp
+$(APP): $(BUILD_DIR) $(APP_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(APP_OBJS)
+
+# Build generator
+$(GEN): $(BUILD_DIR) $(GEN_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $(GEN_OBJ)
+
+# Compile app object files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Compile generator object
+$(BUILD_DIR)/generate_samples.o: $(GEN_SRC)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Clean
 clean:
-	rm -f $(BIN) src/*.o
+	rm -rf $(BUILD_DIR) $(APP) $(GEN)
+
+# Run app
+run: $(APP)
+	./$(APP)
+
+# Run generator (optional convenience)
+generate: $(GEN)
+	./$(GEN)
